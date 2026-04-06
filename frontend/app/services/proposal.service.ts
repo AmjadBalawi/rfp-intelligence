@@ -13,58 +13,48 @@ export class ProposalService {
         body: JSON.stringify({ text: rfpText })
       })
         .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const reader = response.body!.getReader();
           const decoder = new TextDecoder();
           let buffer = '';
 
-          const readStream = () => {
-            reader.read().then(({ done, value }) => {
-              // Decode and accumulate
-              buffer += decoder.decode(value, { stream: !done });
+          const processChunk = (chunk: string) => {
+            buffer += chunk;
+            const parts = buffer.split('\n\n');
+            buffer = parts.pop() || '';
 
-              // Split by double newline (SSE standard)
-              let parts = buffer.split('\n\n');
-              buffer = parts.pop() || '';
-
-              for (const part of parts) {
-                if (part.startsWith('data: ')) {
-                  const jsonStr = part.slice(6).trim();
-                  if (jsonStr) {
-                    try {
-                      const event = JSON.parse(jsonStr);
-                      console.log('[SSE] Received:', event.node, event.state); // Debug
-                      observer.next(event);
-                    } catch (e) {
-                      console.warn('[SSE] Parse error:', jsonStr);
-                    }
-                  }
-                } else if (part.trim()) {
-                  // Some backends send without 'data:' prefix – try parsing anyway
-                  try {
-                    const event = JSON.parse(part);
-                    console.log('[SSE] Raw JSON:', event);
-                    observer.next(event);
-                  } catch (e) {
-                    console.warn('[SSE] Unknown format:', part);
-                  }
+            for (const part of parts) {
+              let jsonStr = part.trim();
+              if (jsonStr.startsWith('data:')) {
+                jsonStr = jsonStr.slice(5).trim(); // remove "data:"
+              }
+              if (jsonStr) {
+                try {
+                  const event = JSON.parse(jsonStr);
+                  console.log('[SSE] Emitting:', event.node);
+                  observer.next(event);
+                } catch (e) {
+                  console.warn('[SSE] Parse error:', jsonStr);
                 }
               }
+            }
+          };
+
+          const readStream = () => {
+            reader.read().then(({ done, value }) => {
+              const chunk = decoder.decode(value, { stream: !done });
+              processChunk(chunk);
 
               if (done) {
-                // Process any leftover data
-                if (buffer.startsWith('data: ')) {
-                  const jsonStr = buffer.slice(6).trim();
-                  if (jsonStr) {
-                    try {
-                      observer.next(JSON.parse(jsonStr));
-                    } catch (e) {}
+                // Process any leftover buffer
+                if (buffer.trim()) {
+                  let leftover = buffer.trim();
+                  if (leftover.startsWith('data:')) {
+                    leftover = leftover.slice(5).trim();
                   }
-                } else if (buffer.trim()) {
                   try {
-                    observer.next(JSON.parse(buffer));
+                    const event = JSON.parse(leftover);
+                    observer.next(event);
                   } catch (e) {}
                 }
                 observer.complete();
