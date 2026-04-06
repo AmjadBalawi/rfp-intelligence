@@ -20,43 +20,47 @@ export class ProposalService {
           const decoder = new TextDecoder();
           let buffer = '';
 
-        const readStream = () => {
-  reader.read().then(({ done, value }) => {
-    buffer += decoder.decode(value, { stream: !done });
-    const parts = buffer.split('\n\n');
-    buffer = parts.pop() || '';
+          const readStream = () => {
+            reader.read().then(({ done, value }) => {
+              buffer += decoder.decode(value, { stream: !done });
+              const parts = buffer.split('\n\n');
+              buffer = parts.pop() || '';
 
-    for (const part of parts) {
-      if (part.startsWith('data: ')) {
-        const jsonStr = part.slice(6).trim();
-        if (jsonStr) {
-          try {
-            observer.next(JSON.parse(jsonStr));
-          } catch (e) {
-            console.warn('Failed to parse SSE data:', jsonStr);
-          }
-        }
-      }
-    }
+              for (const part of parts) {
+                if (part.startsWith('data: ')) {
+                  const jsonStr = part.slice(6).trim();
+                  if (jsonStr) {
+                    try {
+                      observer.next(JSON.parse(jsonStr));
+                    } catch (e) {
+                      console.warn('Failed to parse SSE data:', jsonStr);
+                    }
+                  }
+                }
+              }
 
-    if (done) {
-      // Process any leftover data in buffer (last event without trailing \n\n)
-      if (buffer.startsWith('data: ')) {
-        const jsonStr = buffer.slice(6).trim();
-        if (jsonStr) {
-          try {
-            observer.next(JSON.parse(jsonStr));
-          } catch (e) {
-            console.warn('Failed to parse leftover SSE data:', jsonStr);
-          }
-        }
-      }
-      observer.complete();
-      return;
-    }
-    readStream();
-  }).catch(err => observer.error(err));
-};
+              if (done) {
+                if (buffer.startsWith('data: ')) {
+                  const jsonStr = buffer.slice(6).trim();
+                  if (jsonStr) {
+                    try {
+                      observer.next(JSON.parse(jsonStr));
+                    } catch (e) {
+                      console.warn('Failed to parse leftover SSE data:', jsonStr);
+                    }
+                  }
+                }
+                observer.complete();
+                return;
+              }
+              readStream();
+            }).catch(err => observer.error(err));
+          };
+          readStream();
+        })
+        .catch(err => observer.error(err));
+    });
+  }
 
   async seedCatalog() {
     const response = await fetch(`${this.apiUrl}/catalog/seed`, { method: 'POST' });
