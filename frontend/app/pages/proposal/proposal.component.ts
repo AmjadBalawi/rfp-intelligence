@@ -23,10 +23,8 @@ export class ProposalComponent {
   constructor(private proposalService: ProposalService) {}
 
 onSubmit() {
-  // Prevent double submission
   if (!this.rfpText.trim() || this.loading) return;
 
-  // Reset UI state
   this.pipelineEvents = [];
   this.retrievedProducts = [];
   this.proposalBlocks = [];
@@ -43,18 +41,26 @@ onSubmit() {
 
   this.proposalService.generateProposal(this.rfpText).subscribe({
     next: (event: any) => {
+      console.log('Event:', event); // Debug
+
       if (event.node && event.state !== undefined) {
         this.pipelineEvents.push(event);
+
+        // Handle retrieve
         if (event.node === 'retrieve' && event.state.retrieved_products) {
-          this.retrievedProducts = event.state.retrieved_products;
+          this.retrievedProducts = [...event.state.retrieved_products];
           this.activeTab = 'retrieval';
-        } else if (event.node === 'generate' && event.state.generated_blocks) {
-          this.proposalBlocks = event.state.generated_blocks;
+        }
+        // Handle generate (proposal blocks)
+        else if (event.node === 'generate' && event.state.generated_blocks) {
+          this.proposalBlocks = [...event.state.generated_blocks];
           this.activeTab = 'proposal';
-        } else if (event.node === 'evaluate' && event.state.evaluation) {
+          console.log('Proposal blocks set:', this.proposalBlocks.length);
+        }
+        // Handle evaluate
+        else if (event.node === 'evaluate' && event.state.evaluation) {
           this.evaluation = event.state.evaluation;
           this.activeTab = 'evaluation';
-          // Stop loading and show success
           this.loading = false;
           clearTimeout(timeout);
           alert('✅ Proposal generated successfully!');
@@ -65,10 +71,9 @@ onSubmit() {
       console.error('Generation error:', err);
       this.loading = false;
       clearTimeout(timeout);
-      alert('Failed to generate proposal. Check console.');
+      alert('Failed to generate proposal.');
     },
     complete: () => {
-      // Extra safety: ensure loading is turned off when stream ends
       if (this.loading) {
         this.loading = false;
         clearTimeout(timeout);
@@ -76,7 +81,6 @@ onSubmit() {
     }
   });
 }
-
   seed() {
     this.proposalService.seedCatalog().then(res => {
       console.log('Catalog seeded:', res);
