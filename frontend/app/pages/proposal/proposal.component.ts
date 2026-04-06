@@ -32,6 +32,14 @@ export class ProposalComponent {
   this.loading = true;
   this.activeTab = 'pipeline';
 
+  // Safety timeout: force stop loading after 60 seconds
+  const timeout = setTimeout(() => {
+    if (this.loading) {
+      this.loading = false;
+      console.warn('Loading stopped by timeout');
+    }
+  }, 60000);
+
   this.proposalService.generateProposal(this.rfpText).subscribe({
     next: (event: any) => {
       if (event.node && event.state !== undefined) {
@@ -45,7 +53,9 @@ export class ProposalComponent {
         } else if (event.node === 'evaluate' && event.state.evaluation) {
           this.evaluation = event.state.evaluation;
           this.activeTab = 'evaluation';
+          // Optional: stop loading immediately when evaluation arrives
           this.loading = false;
+          clearTimeout(timeout);
         }
       } else {
         console.log('Received unexpected event:', event);
@@ -54,11 +64,13 @@ export class ProposalComponent {
     error: (err) => {
       console.error('Generation error:', err);
       this.loading = false;
+      clearTimeout(timeout);
       alert('Failed to generate proposal. Check console or backend.');
     },
     complete: () => {
-      // fallback in case stream ever closes
+      // This will always run now because the service calls observer.complete()
       this.loading = false;
+      clearTimeout(timeout);
     }
   });
 }
