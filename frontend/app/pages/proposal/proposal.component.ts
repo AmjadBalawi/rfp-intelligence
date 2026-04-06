@@ -25,7 +25,6 @@ export class ProposalComponent {
   onSubmit() {
   if (!this.rfpText.trim()) return;
 
-  // Reset state
   this.pipelineEvents = [];
   this.retrievedProducts = [];
   this.proposalBlocks = [];
@@ -35,12 +34,8 @@ export class ProposalComponent {
 
   this.proposalService.generateProposal(this.rfpText).subscribe({
     next: (event: any) => {
-      // Every SSE message has a node and state
       if (event.node && event.state !== undefined) {
-        // Log pipeline step
         this.pipelineEvents.push(event);
-
-        // Extract actual data based on node type
         if (event.node === 'retrieve' && event.state.retrieved_products) {
           this.retrievedProducts = event.state.retrieved_products;
           this.activeTab = 'retrieval';
@@ -50,9 +45,9 @@ export class ProposalComponent {
         } else if (event.node === 'evaluate' && event.state.evaluation) {
           this.evaluation = event.state.evaluation;
           this.activeTab = 'evaluation';
+          this.loading = false;
         }
       } else {
-        // Fallback for any other unexpected shape
         console.log('Received unexpected event:', event);
       }
     },
@@ -62,6 +57,7 @@ export class ProposalComponent {
       alert('Failed to generate proposal. Check console or backend.');
     },
     complete: () => {
+      // fallback in case stream ever closes
       this.loading = false;
     }
   });
