@@ -23,50 +23,49 @@ export class ProposalComponent {
   constructor(private proposalService: ProposalService) {}
 
   onSubmit() {
-    if (!this.rfpText.trim()) return;
+  if (!this.rfpText.trim()) return;
 
-    // Reset state
-    this.pipelineEvents = [];
-    this.retrievedProducts = [];
-    this.proposalBlocks = [];
-    this.evaluation = null;
-    this.loading = true;
-    this.activeTab = 'pipeline';  // show pipeline tab first
+  // Reset state
+  this.pipelineEvents = [];
+  this.retrievedProducts = [];
+  this.proposalBlocks = [];
+  this.evaluation = null;
+  this.loading = true;
+  this.activeTab = 'pipeline';
 
-    this.proposalService.generateProposal(this.rfpText).subscribe({
-      next: (event: any) => {
-        // Handle different event types emitted by the service
-        if (event.node && event.state !== undefined) {
-          // Pipeline step event
-          this.pipelineEvents.push(event);
-        } else if (event.products) {
-          // Retrieved products event
-          this.retrievedProducts = event.products;
-          this.activeTab = 'retrieval';  // auto switch to products
-        } else if (event.blocks) {
-          // Proposal blocks event
-          this.proposalBlocks = event.blocks;
-          this.activeTab = 'proposal';   // auto switch to proposal
-        } else if (event.evaluation) {
-          // Evaluation event
-          this.evaluation = event.evaluation;
-          this.activeTab = 'evaluation'; // auto switch to evaluation
-        } else {
-          // Fallback: if raw content arrives, accumulate or log
-          console.log('Received:', event);
+  this.proposalService.generateProposal(this.rfpText).subscribe({
+    next: (event: any) => {
+      // Every SSE message has a node and state
+      if (event.node && event.state !== undefined) {
+        // Log pipeline step
+        this.pipelineEvents.push(event);
+
+        // Extract actual data based on node type
+        if (event.node === 'retrieve' && event.state.retrieved_products) {
+          this.retrievedProducts = event.state.retrieved_products;
+          this.activeTab = 'retrieval';
+        } else if (event.node === 'generate' && event.state.generated_blocks) {
+          this.proposalBlocks = event.state.generated_blocks;
+          this.activeTab = 'proposal';
+        } else if (event.node === 'evaluate' && event.state.evaluation) {
+          this.evaluation = event.state.evaluation;
+          this.activeTab = 'evaluation';
         }
-      },
-      error: (err) => {
-        console.error('Generation error:', err);
-        this.loading = false;
-        // Optionally show an error message to the user
-        alert('Failed to generate proposal. Check console or backend.');
-      },
-      complete: () => {
-        this.loading = false;
+      } else {
+        // Fallback for any other unexpected shape
+        console.log('Received unexpected event:', event);
       }
-    });
-  }
+    },
+    error: (err) => {
+      console.error('Generation error:', err);
+      this.loading = false;
+      alert('Failed to generate proposal. Check console or backend.');
+    },
+    complete: () => {
+      this.loading = false;
+    }
+  });
+}
 
   seed() {
     this.proposalService.seedCatalog().then(res => {
