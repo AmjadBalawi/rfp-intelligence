@@ -22,7 +22,7 @@ export class ProposalComponent {
 
   constructor(private proposalService: ProposalService) {}
 
-  onSubmit() {
+onSubmit() {
   if (!this.rfpText.trim()) return;
 
   this.pipelineEvents = [];
@@ -54,6 +54,7 @@ export class ProposalComponent {
           this.activeTab = 'evaluation';
           this.loading = false;
           clearTimeout(timeout);
+          alert('✅ Proposal generated successfully!'); // <-- show alert here
         }
       } else {
         console.log('Received unexpected event:', event);
@@ -66,9 +67,9 @@ export class ProposalComponent {
       alert('Failed to generate proposal. Check console or backend.');
     },
     complete: () => {
+      // fallback – may never be called if stream stays open
       this.loading = false;
       clearTimeout(timeout);
-      alert('✅ Proposal generated successfully!');  // <-- success popup
     }
   });
 }
