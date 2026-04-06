@@ -25,88 +25,86 @@ export class ProposalComponent {
     private cdr: ChangeDetectorRef
   ) {}
 
-  onSubmit() {
-    if (!this.rfpText.trim() || this.loading) return;
+ onSubmit() {
+  if (!this.rfpText.trim() || this.loading) return;
 
-    // Reset state
-    this.pipelineEvents = [];
-    this.retrievedProducts = [];
-    this.proposalBlocks = [];
-    this.evaluation = null;
-    this.loading = true;
-    this.activeTab = 'pipeline';
-    this.cdr.detectChanges();
+  this.pipelineEvents = [];
+  this.retrievedProducts = [];
+  this.proposalBlocks = [];
+  this.evaluation = null;
+  this.loading = true;
+  this.activeTab = 'pipeline';
+  this.cdr.detectChanges();
 
-    const timeout = setTimeout(() => {
+  const timeout = setTimeout(() => {
+    if (this.loading) {
+      this.loading = false;
+      this.cdr.detectChanges();
+    }
+  }, 60000);
+
+  this.proposalService.generateProposal(this.rfpText).subscribe({
+    next: (event: any) => {
+      console.log('Event:', event);
+      if (event?.node && event.state) {
+        this.pipelineEvents.push({ node: event.node, state: event.state });
+
+        // Try multiple possible property names
+        const state = event.state;
+        switch (event.node) {
+          case 'retrieve':
+            const products = state.retrieved_products || state.products;
+            if (products) {
+              this.retrievedProducts = [...products];
+              this.activeTab = 'retrieval';
+              this.cdr.detectChanges();
+            }
+            break;
+          case 'generate':
+            const blocks = state.generated_blocks || state.blocks || state.proposal_blocks;
+            if (blocks && Array.isArray(blocks)) {
+              this.proposalBlocks = [...blocks];
+              this.activeTab = 'proposal';
+              console.log('Proposal blocks count:', this.proposalBlocks.length);
+              this.cdr.detectChanges();
+            } else {
+              console.warn('No blocks found in state:', state);
+            }
+            break;
+          case 'evaluate':
+            const evalData = state.evaluation || state.scores;
+            if (evalData) {
+              this.evaluation = evalData;
+              this.activeTab = 'evaluation';
+              this.loading = false;
+              clearTimeout(timeout);
+              this.cdr.detectChanges();
+              alert('✅ Proposal generated!');
+            } else {
+              console.warn('No evaluation found in state:', state);
+            }
+            break;
+          default:
+            console.log(`Pipeline node: ${event.node}`);
+        }
+      } else {
+        console.warn('Event missing node or state:', event);
+      }
+    },
+    error: (err) => {
+      console.error(err);
+      this.loading = false;
+      alert('Generation failed');
+    },
+    complete: () => {
       if (this.loading) {
         this.loading = false;
-        this.cdr.detectChanges();
-        console.warn('Loading stopped by timeout');
-      }
-    }, 60000);
-
-    this.proposalService.generateProposal(this.rfpText).subscribe({
-      next: (event: any) => {
-        console.log('📦 Event received:', event);
-
-        if (event?.node && event.state) {
-          this.pipelineEvents.push({ node: event.node, state: event.state });
-
-          switch (event.node) {
-            case 'retrieve':
-              if (event.state.retrieved_products) {
-                this.retrievedProducts = [...event.state.retrieved_products];
-                this.activeTab = 'retrieval';
-                this.cdr.detectChanges();
-              }
-              break;
-
-            case 'generate':
-              if (event.state.generated_blocks) {
-                this.proposalBlocks = [...event.state.generated_blocks];
-                this.activeTab = 'proposal';
-                console.log('✅ Proposal blocks loaded:', this.proposalBlocks.length);
-                this.cdr.detectChanges();
-              }
-              break;
-
-            case 'evaluate':
-              if (event.state.evaluation) {
-                this.evaluation = event.state.evaluation;
-                this.activeTab = 'evaluation';
-                // Stop loading and show success
-                this.loading = false;
-                clearTimeout(timeout);
-                this.cdr.detectChanges();
-                // Alert is fine – after dismissing, button is clickable because loading is false
-                alert('✅ Proposal generated successfully!');
-              }
-              break;
-
-            default:
-              console.log(`📌 Pipeline node: ${event.node}`);
-          }
-        }
-      },
-      error: (err) => {
-        console.error('❌ Generation error:', err);
-        this.loading = false;
         clearTimeout(timeout);
-        alert('Failed to generate proposal. Check console.');
         this.cdr.detectChanges();
-      },
-      complete: () => {
-        console.log('🏁 Stream completed');
-        // Only reset loading if it wasn't already reset by 'evaluate' event
-        if (this.loading) {
-          this.loading = false;
-          clearTimeout(timeout);
-          this.cdr.detectChanges();
-        }
       }
-    });
-  }
-
+    }
+  });
+}
   seed() {
     this.proposalService.seedCatalog()
       .then(res => {
