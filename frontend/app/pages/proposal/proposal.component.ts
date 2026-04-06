@@ -54,7 +54,8 @@ onSubmit() {
           this.activeTab = 'evaluation';
           this.loading = false;
           clearTimeout(timeout);
-          alert('✅ Proposal generated successfully!'); // <-- show alert here
+          // Delay alert so button is clickable first (though alert blocks anyway)
+          setTimeout(() => alert('✅ Proposal generated successfully!'), 0);
         }
       } else {
         console.log('Received unexpected event:', event);
@@ -64,12 +65,14 @@ onSubmit() {
       console.error('Generation error:', err);
       this.loading = false;
       clearTimeout(timeout);
-      alert('Failed to generate proposal. Check console or backend.');
+      setTimeout(() => alert('Failed to generate proposal. Check console or backend.'), 0);
     },
     complete: () => {
-      // fallback – may never be called if stream stays open
-      this.loading = false;
-      clearTimeout(timeout);
+      // Ensure loading is false when stream ends (fallback)
+      if (this.loading) {
+        this.loading = false;
+        clearTimeout(timeout);
+      }
     }
   });
 }
