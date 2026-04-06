@@ -6,3 +6,4 @@ langchain_groq==1.1.2
 langgraph==1.1.6
 pydantic_settings==2.13.1
 sentence_transformers==2.2.2
+huggingface_hub==0.14.1
