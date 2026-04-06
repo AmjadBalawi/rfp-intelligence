@@ -87,14 +87,27 @@ def retrieve_node(state: AgentState):
     return {"retrieved_products": products}
 
 def plan_node(state: AgentState):
+    extracted = state.get("extracted")
+    products = state.get("retrieved_products")
+    if not extracted or not products:
+        print(f"Missing data: extracted={extracted}, products={products}")
+        return {"plan": {"title": "Event Proposal", "sections": [], "total_estimated_cost": 0}}
     prompt = PLAN_PROMPT.format(
         extracted=json.dumps(state["extracted"]),
         products=json.dumps(state["retrieved_products"])
     )
-    response = llm.invoke(prompt)
+    try:
+        response = llm.invoke(prompt)
+    except Exception as e:
+        print(f"Plan node LLM error: {e}")
+        return {"plan": {"title": "Error", "sections": [], "total_estimated_cost": 0}}
     try:
         cleaned = _clean_json(response.content)
-        plan = json.loads(cleaned)
+        try:
+            plan = json.loads(cleaned)
+        except Exception as e:
+            print(f"Plan JSON error: {e}\nRaw: {cleaned}")
+            plan = {"title": "Fallback Plan", "sections": [], "total_estimated_cost": 0}
         # Ensure required keys exist
         if "sections" not in plan:
             plan["sections"] = []
