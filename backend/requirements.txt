@@ -1,9 +1,8 @@
-numpy==1.26.4
 chromadb==0.4.24
 fastapi==0.135.3
+fastembed==0.8.0
 httpx==0.28.1
 langchain_groq==1.1.2
 langgraph==1.1.6
 pydantic_settings==2.13.1
-sentence_transformers==2.2.2
-huggingface_hub==0.14.1
+numpy==1.25.2
