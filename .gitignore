@@ -1,0 +1,19 @@
+@"
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+chroma_db/
+
+# Angular
+node_modules/
+.angular/
+.vercel/
+dist/
+*.log
+
+# IDE
+.vscode/
+.idea/
+"@ | Out-File -FilePath .gitignore -Encoding utf8

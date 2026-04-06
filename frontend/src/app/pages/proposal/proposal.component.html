@@ -1,0 +1,49 @@
+<div class="container">
+  <h1>RFP Intelligence</h1>
+  <textarea [(ngModel)]="rfpText" placeholder="Paste your RFP here..." rows="6"></textarea>
+  <button (click)="onSubmit()" [disabled]="loading">Generate Proposal</button>
+  <button (click)="seed()">Seed Catalog</button>
+
+  <div class="tabs">
+    <button [class.active]="activeTab === 'pipeline'" (click)="activeTab = 'pipeline'">Pipeline</button>
+    <button [class.active]="activeTab === 'retrieval'" (click)="activeTab = 'retrieval'">Retrieved Products</button>
+    <button [class.active]="activeTab === 'proposal'" (click)="activeTab = 'proposal'">Proposal</button>
+    <button [class.active]="activeTab === 'evaluation'" (click)="activeTab = 'evaluation'">Evaluation</button>
+  </div>
+
+  <div class="tab-content">
+    <div *ngIf="activeTab === 'pipeline'">
+      <div *ngFor="let event of pipelineEvents" class="pipeline-step">
+        <strong>{{ event.node }}</strong> – {{ event.state | json }}
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'retrieval'">
+      <div *ngFor="let product of retrievedProducts" class="product-card">
+        <h3>{{ product.title }}</h3>
+        <p>{{ product.description }}</p>
+        <span class="price">{{ product.price_eur }} €</span>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'proposal'">
+      <div *ngFor="let block of proposalBlocks" class="proposal-block">
+        <h4>{{ block.section }}</h4>
+        <div [innerHTML]="block.content"></div>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'evaluation' && evaluation">
+      <h3>Combined Score: {{ evaluation.combined_score | number:'1.0-2' }}</h3>
+      <div *ngFor="let dim of evaluation.llm.scores | keyvalue" class="score-bar">
+        <span>{{ dim.key }}</span>
+        <div class="bar"><div [style.width.%]="dim.value * 10"></div></div>
+        <span>{{ dim.value }}/10</span>
+      </div>
+      <div class="flags" *ngIf="evaluation.heuristic.flags.length">
+        <strong>Flags:</strong> {{ evaluation.heuristic.flags.join(', ') }}
+      </div>
+      <p><strong>LLM Review:</strong> {{ evaluation.llm.overall_review }}</p>
+    </div>
+  </div>
+</div>

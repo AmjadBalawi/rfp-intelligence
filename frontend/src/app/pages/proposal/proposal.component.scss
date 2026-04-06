@@ -1,0 +1,10 @@
+.container { max-width: 1200px; margin: 2rem auto; padding: 1rem; background: #1e1e2f; color: #eee; border-radius: 16px; }
+textarea { width: 100%; background: #2a2a3b; color: white; border: none; padding: 1rem; }
+button { background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; margin: 0.5rem; border-radius: 8px; cursor: pointer; }
+.tabs { display: flex; gap: 1rem; margin: 1rem 0; border-bottom: 1px solid #333; }
+.tabs button { background: none; color: #aaa; }
+.tabs button.active { color: white; border-bottom: 2px solid #3b82f6; }
+.product-card, .proposal-block { background: #2a2a3b; margin: 0.5rem 0; padding: 1rem; border-radius: 12px; }
+.score-bar { display: flex; align-items: center; gap: 1rem; }
+.bar { background: #333; width: 200px; height: 10px; border-radius: 5px; overflow: hidden; }
+.bar div { background: #3b82f6; height: 100%; }
