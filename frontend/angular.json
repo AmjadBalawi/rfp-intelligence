@@ -33,7 +33,7 @@
             "styles": [
               "styles.scss"
             ],
-            "outputPath": "dist/frontend"
+            "outputPath": "dist/rfp-intelligence"
           },
           "configurations": {
             "production": {
