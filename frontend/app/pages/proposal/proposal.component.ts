@@ -32,7 +32,6 @@ export class ProposalComponent {
   this.loading = true;
   this.activeTab = 'pipeline';
 
-  // Safety timeout: force stop loading after 60 seconds
   const timeout = setTimeout(() => {
     if (this.loading) {
       this.loading = false;
@@ -53,7 +52,6 @@ export class ProposalComponent {
         } else if (event.node === 'evaluate' && event.state.evaluation) {
           this.evaluation = event.state.evaluation;
           this.activeTab = 'evaluation';
-          // Optional: stop loading immediately when evaluation arrives
           this.loading = false;
           clearTimeout(timeout);
         }
@@ -68,9 +66,9 @@ export class ProposalComponent {
       alert('Failed to generate proposal. Check console or backend.');
     },
     complete: () => {
-      // This will always run now because the service calls observer.complete()
       this.loading = false;
       clearTimeout(timeout);
+      alert('✅ Proposal generated successfully!');  // <-- success popup
     }
   });
 }
