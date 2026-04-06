@@ -4,7 +4,7 @@ from app.config import settings
 
 client = chromadb.PersistentClient(path=settings.chroma_persist_dir)
 collection = client.get_or_create_collection("products")
-model = SentenceTransformer("all-MiniLM-L6-v2")
+model = SentenceTransformer("paraphrase-MiniLM-L3-v2")
 
 
 def index_products(products: list[dict]):
