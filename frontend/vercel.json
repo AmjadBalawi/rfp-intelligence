@@ -1,5 +1,5 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "src/index.html" }
-  ]
+  "buildCommand": "ng build --prod",
+  "outputDirectory": "dist/rfp-intelligence",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
