@@ -6,9 +6,10 @@ app = FastAPI(title="RFP Intelligence")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["POST", "OPTIONS"],
-    allow_headers=["Content-Type"],
-    expose_headers=["Content-Type"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
 )
 app.include_router(router, prefix="/api")
 
