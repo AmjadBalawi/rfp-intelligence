@@ -11,33 +11,45 @@ export class ProposalService {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: rfpText })
-      }).then(async response => {
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const reader = response.body!.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
 
-        while (true) {
-          const { done, value } = await reader!.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n\n');
-          buffer = lines.pop() || '';
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              if (data) {
-                try {
-                  const parsed = JSON.parse(data);
-                  observer.next(parsed);
-                } catch (e) {
-                  observer.next({ raw: data });
+          const readStream = () => {
+            reader.read().then(({ done, value }) => {
+              if (done) {
+                observer.complete();
+                return;
+              }
+              buffer += decoder.decode(value, { stream: true });
+              // Split on double newline (SSE standard)
+              const parts = buffer.split('\n\n');
+              buffer = parts.pop() || '';
+
+              for (const part of parts) {
+                if (part.startsWith('data: ')) {
+                  const jsonStr = part.slice(6).trim();
+                  if (jsonStr) {
+                    try {
+                      const event = JSON.parse(jsonStr);
+                      observer.next(event);
+                    } catch (e) {
+                      console.warn('Failed to parse SSE data:', jsonStr);
+                    }
+                  }
                 }
               }
-            }
-          }
-        }
-        observer.complete();
-      }).catch(err => observer.error(err));
+              readStream();
+            }).catch(err => observer.error(err));
+          };
+          readStream();
+        })
+        .catch(err => observer.error(err));
     });
   }
 
