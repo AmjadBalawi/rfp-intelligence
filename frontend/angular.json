@@ -21,7 +21,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "browser": "src/main.ts",
+            "browser": "main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -31,7 +31,7 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "styles.scss"
             ],
             "outputPath": "dist/frontend"
           },
