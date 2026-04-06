@@ -1,7 +1,12 @@
 <div class="container">
   <h1>RFP Intelligence</h1>
   <textarea [(ngModel)]="rfpText" placeholder="Paste your RFP here..." rows="6"></textarea>
-  <button (click)="onSubmit()" [disabled]="loading">Generate Proposal</button>
+  <button (click)="onSubmit()" [disabled]="loading">
+  <span *ngIf="!loading">Generate Proposal</span>
+  <span *ngIf="loading">
+    <span class="spinner"></span> Generating...
+  </span>
+</button>
   <button (click)="seed()">Seed Catalog</button>
 
   <div class="tabs">
