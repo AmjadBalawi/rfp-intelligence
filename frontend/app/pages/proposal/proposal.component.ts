@@ -23,7 +23,7 @@ export class ProposalComponent {
   constructor(private proposalService: ProposalService) {}
 
 onSubmit() {
-  if (!this.rfpText.trim()) return;
+  if (!this.rfpText.trim() || this.loading) return; // prevent double click
 
   this.pipelineEvents = [];
   this.retrievedProducts = [];
@@ -41,6 +41,7 @@ onSubmit() {
 
   this.proposalService.generateProposal(this.rfpText).subscribe({
     next: (event: any) => {
+      console.log('Received event:', event); // DEBUG: see what arrives
       if (event.node && event.state !== undefined) {
         this.pipelineEvents.push(event);
         if (event.node === 'retrieve' && event.state.retrieved_products) {
@@ -54,22 +55,26 @@ onSubmit() {
           this.activeTab = 'evaluation';
           this.loading = false;
           clearTimeout(timeout);
-          alert('✅ Proposal generated successfully!'); // <-- show alert here
+          alert('✅ Proposal generated successfully!');
         }
       } else {
-        console.log('Received unexpected event:', event);
+        console.log('Unexpected event shape:', event);
       }
     },
     error: (err) => {
       console.error('Generation error:', err);
       this.loading = false;
       clearTimeout(timeout);
-      alert('Failed to generate proposal. Check console or backend.');
+      alert('Failed to generate proposal.');
     },
     complete: () => {
-      // fallback – may never be called if stream stays open
-      this.loading = false;
-      clearTimeout(timeout);
+      console.log('Stream completed');
+      // Ensure loading is always turned off when stream ends
+      if (this.loading) {
+        this.loading = false;
+        clearTimeout(timeout);
+        alert('✅ Proposal generation finished (stream closed).');
+      }
     }
   });
 }
