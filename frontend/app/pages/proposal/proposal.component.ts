@@ -1,8 +1,12 @@
 import { Component } from '@angular/core';
-import { ProposalService } from '../services/proposal.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ProposalService } from '../../services/proposal.service';
 
 @Component({
   selector: 'app-proposal',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './proposal.component.html',
   styleUrls: ['./proposal.component.scss']
 })

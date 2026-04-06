@@ -5,6 +5,6 @@ import { ProposalComponent } from './pages/proposal/proposal.component';
   selector: 'app-root',
   standalone: true,
   imports: [ProposalComponent],
-  template: `<app-proposal></app-proposal>`,
+  template: `<app-proposal></app-proposal>`
 })
 export class AppComponent {}

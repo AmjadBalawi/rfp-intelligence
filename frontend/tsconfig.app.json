@@ -9,7 +9,5 @@
     "main.ts",
     "environments/**/*.ts"
   ],
-  "exclude": [
-    "**/*.spec.ts"
-  ]
+  "exclude": ["**/*.spec.ts"]
 }

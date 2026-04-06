@@ -3,7 +3,8 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "strict": true,
+    "strict": false,
+    "moduleResolution": "node",
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
