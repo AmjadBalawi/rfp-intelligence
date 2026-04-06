@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ProposalService {
-  private apiUrl = 'http://localhost:5000/api';
+  private apiUrl = 'https://rfp-intelligence-2.onrender.com/api';
 
   generateProposal(rfpText: string): Observable<any> {
     return new Observable(observer => {
