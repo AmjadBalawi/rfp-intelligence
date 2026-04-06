@@ -22,8 +22,11 @@ export class ProposalService {
 
           const readStream = () => {
             reader.read().then(({ done, value }) => {
+              // Decode and accumulate
               buffer += decoder.decode(value, { stream: !done });
-              const parts = buffer.split('\n\n');
+
+              // Split by double newline (SSE standard)
+              let parts = buffer.split('\n\n');
               buffer = parts.pop() || '';
 
               for (const part of parts) {
@@ -31,24 +34,38 @@ export class ProposalService {
                   const jsonStr = part.slice(6).trim();
                   if (jsonStr) {
                     try {
-                      observer.next(JSON.parse(jsonStr));
+                      const event = JSON.parse(jsonStr);
+                      console.log('[SSE] Received:', event.node, event.state); // Debug
+                      observer.next(event);
                     } catch (e) {
-                      console.warn('Failed to parse SSE data:', jsonStr);
+                      console.warn('[SSE] Parse error:', jsonStr);
                     }
+                  }
+                } else if (part.trim()) {
+                  // Some backends send without 'data:' prefix – try parsing anyway
+                  try {
+                    const event = JSON.parse(part);
+                    console.log('[SSE] Raw JSON:', event);
+                    observer.next(event);
+                  } catch (e) {
+                    console.warn('[SSE] Unknown format:', part);
                   }
                 }
               }
 
               if (done) {
+                // Process any leftover data
                 if (buffer.startsWith('data: ')) {
                   const jsonStr = buffer.slice(6).trim();
                   if (jsonStr) {
                     try {
                       observer.next(JSON.parse(jsonStr));
-                    } catch (e) {
-                      console.warn('Failed to parse leftover SSE data:', jsonStr);
-                    }
+                    } catch (e) {}
                   }
+                } else if (buffer.trim()) {
+                  try {
+                    observer.next(JSON.parse(buffer));
+                  } catch (e) {}
                 }
                 observer.complete();
                 return;
