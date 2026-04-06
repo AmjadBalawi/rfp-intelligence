@@ -23,8 +23,10 @@ export class ProposalComponent {
   constructor(private proposalService: ProposalService) {}
 
 onSubmit() {
-  if (!this.rfpText.trim()) return;
+  // Prevent double submission
+  if (!this.rfpText.trim() || this.loading) return;
 
+  // Reset UI state
   this.pipelineEvents = [];
   this.retrievedProducts = [];
   this.proposalBlocks = [];
@@ -52,23 +54,21 @@ onSubmit() {
         } else if (event.node === 'evaluate' && event.state.evaluation) {
           this.evaluation = event.state.evaluation;
           this.activeTab = 'evaluation';
+          // Stop loading and show success
           this.loading = false;
           clearTimeout(timeout);
-          // Delay alert so button is clickable first (though alert blocks anyway)
-          setTimeout(() => alert('✅ Proposal generated successfully!'), 0);
+          alert('✅ Proposal generated successfully!');
         }
-      } else {
-        console.log('Received unexpected event:', event);
       }
     },
     error: (err) => {
       console.error('Generation error:', err);
       this.loading = false;
       clearTimeout(timeout);
-      setTimeout(() => alert('Failed to generate proposal. Check console or backend.'), 0);
+      alert('Failed to generate proposal. Check console.');
     },
     complete: () => {
-      // Ensure loading is false when stream ends (fallback)
+      // Extra safety: ensure loading is turned off when stream ends
       if (this.loading) {
         this.loading = false;
         clearTimeout(timeout);
