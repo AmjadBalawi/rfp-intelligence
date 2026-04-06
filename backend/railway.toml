@@ -1,6 +1,0 @@
-[build]
-  dockerfile = "Dockerfile"
-
-[deploy]
-  numReplicas = 1
-  healthcheck = "/health"

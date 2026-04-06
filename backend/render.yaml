@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: rfp-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: PROPOSALES_API_KEY
+        sync: false
+      - key: PROPOSALES_COMPANY_ID
+        sync: false
+      - key: CHROMA_PERSIST_DIR
+        value: /tmp/chroma_db
