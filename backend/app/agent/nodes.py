@@ -92,22 +92,15 @@ def plan_node(state: AgentState):
     if not extracted or not products:
         print(f"Missing data: extracted={extracted}, products={products}")
         return {"plan": {"title": "Event Proposal", "sections": [], "total_estimated_cost": 0}}
+
     prompt = PLAN_PROMPT.format(
-        extracted=json.dumps(state["extracted"]),
-        products=json.dumps(state["retrieved_products"])
+        extracted=json.dumps(extracted),
+        products=json.dumps(products)
     )
     try:
         response = llm.invoke(prompt)
-    except Exception as e:
-        print(f"Plan node LLM error: {e}")
-        return {"plan": {"title": "Error", "sections": [], "total_estimated_cost": 0}}
-    try:
         cleaned = _clean_json(response.content)
-        try:
-            plan = json.loads(cleaned)
-        except Exception as e:
-            print(f"Plan JSON error: {e}\nRaw: {cleaned}")
-            plan = {"title": "Fallback Plan", "sections": [], "total_estimated_cost": 0}
+        plan = json.loads(cleaned)
         # Ensure required keys exist
         if "sections" not in plan:
             plan["sections"] = []
@@ -115,9 +108,53 @@ def plan_node(state: AgentState):
             plan["total_estimated_cost"] = 0
         if "title" not in plan:
             plan["title"] = "Event Proposal"
+
+        # Validate that product IDs exist in retrieved_products
+        valid_ids = {str(p.get("id")) for p in products}
+        for section in plan.get("sections", []):
+            section["product_ids"] = [pid for pid in section.get("product_ids", []) if str(pid) in valid_ids]
+
+        # If after filtering sections become empty, fallback
+        if not plan["sections"]:
+            raise ValueError("No valid sections after filtering")
     except Exception as e:
-        print(f"Plan parse error: {e}")
-        plan = {"title": "Event Proposal", "sections": [], "total_estimated_cost": 0}
+        print(f"Plan node error: {e}, using fallback plan")
+        # Build fallback plan from retrieved products grouped by category
+        categories = {}
+        for p in products:
+            cat = p.get("category", "other")
+            categories.setdefault(cat, []).append(p)
+
+        # Determine needed categories from extracted requirements
+        needed_cats = []
+        if extracted.get("rooms_needed"):
+            needed_cats.append("venue")
+        if extracted.get("catering_needed"):
+            needed_cats.append("catering")
+        if extracted.get("av_needed"):
+            needed_cats.append("av")
+        # Fallback to any available categories if none matched
+        if not needed_cats:
+            needed_cats = list(categories.keys())[:3]
+
+        fallback_sections = []
+        total_cost = 0
+        for cat in needed_cats:
+            if cat in categories and categories[cat]:
+                # Pick the first product in this category (you may want to choose cheapest)
+                prod = categories[cat][0]
+                fallback_sections.append({
+                    "title": cat.capitalize(),
+                    "product_ids": [prod["id"]]
+                })
+                total_cost += prod.get("price_eur", 0)
+
+        plan = {
+            "title": "Event Proposal (Auto-Generated)",
+            "sections": fallback_sections,
+            "total_estimated_cost": total_cost
+        }
+
     return {"plan": plan}
 
 def generate_node(state: AgentState):
