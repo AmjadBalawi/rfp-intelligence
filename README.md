@@ -4,9 +4,18 @@
 [User] → Angular UI → FastAPI SSE → LangGraph pipeline (extract → retrieve → plan → generate → create → evaluate) → GROQ LLM & ChromaDB (embeddings).  
 Proposal creation calls the Proposales API if a valid API key and company ID are provided; otherwise returns a mock UUID.
 
+## Deployment
+The frontend is hosted on Vercel: https://rfp-intelligence-orcin.vercel.app/
+
+The backend is hosted on Render: https://rfp-intelligence-2.onrender.com/health
+
+The backend on Render goes to sleep after a few minutes of inactivity on the free tier.
+
+GitHub Repo: https://github.com/AmjadBalawi/rfp-intelligence
+
 ## Model Selection
-- **GROQ (llama-3.3-70b-versatile)** for extraction, planning, generation, and evaluation – free tier, excellent JSON adherence, low latency.
-- **all-MiniLM-L6-v2** for embeddings (384 dims, runs locally, no API cost).
+- **GROQ (llama-3.1-8b-instant)** for extraction, planning, generation, and evaluation – free tier, excellent JSON adherence, low latency.
+- **BAAI/bge-small-en-v1.5** for embeddings with Model Size around ~133 MB and its architecture is BERT-like (384 dims, runs locally, no API cost).
 - Fallback logic ensures pipeline continues even if LLM JSON parsing fails.
 
 ## Retrieval Strategy

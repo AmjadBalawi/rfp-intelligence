@@ -16,7 +16,7 @@
 > “Design a LangGraph pipeline for RFP processing with separate nodes: extract requirements, retrieve relevant products, plan sections, generate copy, create proposal, evaluate. Use Claude 3.”
 
 **AI output:** Provided the state schema, node stubs, and suggested using `StateGraph`. This became the backbone of the system.  
-**Iteration:** Later swapped Claude 3 for GROQ (`llama-3.3-70b`) because of cost and speed.
+**Iteration:** Later swapped Claude 3 for GROQ (`llama-3.1-8b-instant`) because of cost and speed.
 
 ---
 
@@ -26,7 +26,7 @@
 > “Single‑query retrieval gives poor results for mixed requirements (venue + catering + AV). How can I improve?”
 
 **AI suggested:** Multi‑query – one query per category (venue, catering, AV, accommodation), then deduplicate by highest similarity.  
-**Implementation:** ChromaDB + `all-MiniLM-L6-v2` embeddings. This lifted relevance dramatically.
+**Implementation:** ChromaDB + `BAAI/bge-small-en-v1.5` embeddings. This lifted relevance dramatically.
 
 ---
 
@@ -66,5 +66,6 @@
   "company_id": 5263,
   "language": "en",
   "title_md": "Event Proposal",
-  "blocks": [{"content_id": 178071, "type": "product-block"}]
+  "description": "Full wedding coordination"
+               
 }
