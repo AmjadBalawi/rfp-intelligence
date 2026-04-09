@@ -47,3 +47,5 @@ GitHub Repo: https://github.com/AmjadBalawi/rfp-intelligence
 - *Cut*: Real Proposales API integration is fully implemented and can be enabled by setting `PROPOSALES_API_KEY` and `PROPOSALES_COMPANY_ID` in `.env`. By default, the system uses a mock to avoid external dependencies.  
 - *Would improve*: Better budget parsing, automatic re-ranking refinements, fallback block generation improvements, and user feedback loop for fine-tuning evaluation.  
 - *Honest*: The evaluation LLM is not fine-tuned; for production we’d gather human‑rated examples. ChromaDB persistence is local – for distributed deployments use a cloud vector DB.  
+![img.png](img.png)
+![img_1.png](img_1.png)
