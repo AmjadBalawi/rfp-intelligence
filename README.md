@@ -6,13 +6,13 @@ Proposal creation calls the Proposales API if a valid API key and company ID are
 Retrieval now combines **BM25 lexical search + semantic embeddings**, with query normalization and guest-count-based re-ranking for better accuracy.
 
 ## Deployment
-The frontend is hosted on Vercel: https://rfp-intelligence-orcin.vercel.app/
+The frontend is hosted on Vercel: https://rfp-intelligence-orcin.vercel.app/  
 
-The backend is hosted on Render: https://rfp-intelligence-2.onrender.com/health
+The backend is hosted on Render: https://rfp-intelligence-2.onrender.com/health  
 
-The backend on Render goes to sleep after a few minutes of inactivity on the free tier.
+The backend on Render goes to sleep after a few minutes of inactivity on the free tier.  
 
-GitHub Repo: https://github.com/AmjadBalawi/rfp-intelligence
+GitHub Repo: https://github.com/AmjadBalawi/rfp-intelligence  
 
 ## Model Selection
 - **GROQ (llama-3.1-8b-instant)** for extraction, planning, generation, and evaluation – free tier, excellent JSON adherence, low latency.  
@@ -21,10 +21,12 @@ GitHub Repo: https://github.com/AmjadBalawi/rfp-intelligence
 - Fallback logic ensures pipeline continues even if LLM JSON parsing fails.
 
 ## Retrieval Strategy
-- **Multi‑query semantic search + BM25 hybrid**: separate query per requirement category (venue, catering, AV, accommodation).  
+- **Hybrid retrieval (BM25 + embeddings)**: multi-query per requirement category (venue, catering, AV, accommodation).  
   BM25 scores are normalized and combined with embedding similarity (weight BM25 0.4, embeddings 0.6).  
+- Weighted query boosts based on query type (venue 1.2×, catering 1.1×, AV 1.05×).  
+- Automatic re-ranking based on guest count and capacity.  
 - **ChromaDB** with cosine similarity and persistent storage (`./chroma_db`).  
-- Query tokens are lowercased and normalized; fallback to embeddings only if BM25 is not initialized.  
+- Query tokens are lowercased and normalized; fallback to embeddings-only retrieval if BM25 is not initialized.  
 - Products are indexed via `/catalog/seed` (mock products by default, or pushed to Proposales if real API is configured).  
 - Index can be refreshed on demand via `/catalog/sync` (fetches real products from Proposales when a valid key is provided).  
 
@@ -39,9 +41,9 @@ GitHub Repo: https://github.com/AmjadBalawi/rfp-intelligence
 - **Cost**: GROQ offers a generous free tier; for high volume, route simple RFPs to `llama-3.1-8b-instant` (cheaper/faster).  
 - **Observability**: Add LangSmith tracing, structured logging, and Sentry for errors.  
 - **Security**: Input sanitisation, rate limiting, API key rotation, prompt injection protection via explicit JSON schemas.  
-- Retrieval is now hybrid BM25 + embeddings, normalized, and re-ranked automatically to reduce mismatches and errors.  
+- Hybrid retrieval is fully implemented with normalized scores, weighted boosts, and automatic re-ranking to reduce mismatches and errors.
 
 ## Trade‑offs & Future Work
 - *Cut*: Real Proposales API integration is fully implemented and can be enabled by setting `PROPOSALES_API_KEY` and `PROPOSALES_COMPANY_ID` in `.env`. By default, the system uses a mock to avoid external dependencies.  
-- *Would improve*: Better budget parsing, hybrid search (BM25 + semantic) with normalized scores, automatic re-ranking, fallback block generation, user feedback loop for fine-tuning evaluation.  
-- *Honest*: The evaluation LLM is not fine‑tuned; for production we’d gather human‑rated examples. ChromaDB persistence is local – for distributed deployments use a cloud vector DB.
+- *Would improve*: Better budget parsing, automatic re-ranking refinements, fallback block generation improvements, and user feedback loop for fine-tuning evaluation.  
+- *Honest*: The evaluation LLM is not fine-tuned; for production we’d gather human‑rated examples. ChromaDB persistence is local – for distributed deployments use a cloud vector DB.  
